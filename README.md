@@ -85,6 +85,10 @@
     FROM customer_transactions 
     GROUP BY txn_type
 ```
+- Result:
+
+  <img width="779" height="213" alt="image" src="https://github.com/user-attachments/assets/499b3662-f0f9-493c-814e-1c10bb845b8c" />
+
 ### 2. What is the average total historical deposit counts and amounts for all customers?
 ```sql
     WITH cte AS (
@@ -103,6 +107,9 @@
         , ROUND(AVG(CAST(deposit_amount AS float)), 0) amount
     FROM cte
 ```
+- Result:
+
+  <img width="612" height="116" alt="image" src="https://github.com/user-attachments/assets/866e39ef-3dc2-4fcd-9faa-f52089bc9c9c" />
 
 ### 3. For each month - how many Data Bank customers make more than 1 deposit and either 1 purchase or 1 withdrawal in a single month?
 ```sql
@@ -134,6 +141,9 @@
     GROUP BY [Year],[Month], month_name
     ORDER BY [year], [Month] ASC
 ```
+- Result:
+
+  <img width="881" height="253" alt="image" src="https://github.com/user-attachments/assets/9f131530-a483-4251-8930-0a86c9affc35" />
 
 ### 4. What is the closing balance for each customer at the end of the month?
 ```sql
@@ -164,6 +174,9 @@
           ) AS closing_balance
     FROM customer_monthly_balance
 ```
+- Result:
+
+  <img width="1185" height="425" alt="image" src="https://github.com/user-attachments/assets/1ad04109-4103-43ee-8dbc-2af95d812882" />
 
 ### 5. What is the percentage of customers who increase their closing balance by more than 5%?
 ```sql
@@ -219,6 +232,10 @@
         ) [percentage]
     FROM first_last
 ```
+- Result:
+
+    <img width="323" height="121" alt="image" src="https://github.com/user-attachments/assets/9b36e54a-ab2d-4f55-80ef-c99f3f4ed2b5" />
+
 # C. Data Allocation Challenge
 ### Opt 1. running customer balance column that includes the impact each transaction
 ```sql
@@ -233,10 +250,14 @@
               ) running_balance
     FROM customer_transactions
 ```
-=> Summary: phù hợp xem chi tiết sao kê và nắm bắt nhanh được số dư cuối tháng.
+- Result:
+
+  <img width="1227" height="544" alt="image" src="https://github.com/user-attachments/assets/3451e888-2031-4f84-bda3-b5d5c0b5da09" />
+
+- Summary: phù hợp xem chi tiết sao kê và nắm bắt nhanh được số dư cuối tháng.
     Tuy nhiên có thể không phản ánh chính xác nhu cầu thực tế: 
-    - nếu khách hàng có số dư cao giữa tháng nhưng rút gần hết trước cuối tháng → ngân hàng sẽ dự trù thiếu
-    - Rủi ro không đủ dung lượng để đáp ứng khi khách tăng sử dụng trong tháng 
+    + nếu khách hàng có số dư cao giữa tháng nhưng rút gần hết trước cuối tháng → ngân hàng sẽ dự trù thiếu
+    + Rủi ro không đủ dung lượng để đáp ứng khi khách tăng sử dụng trong tháng 
 
 
 ### Opt 2. customer balance at the end of each month
@@ -265,7 +286,11 @@
     ORDER BY customer_id
         , [Month]
 ```
-=> Summary: có thế xem được xu hướng tiêu dùng của khách hàng trong ngắn hạn, giảm rủi ro thiếu dự trù hơn Option 1 và là optione tối ưu nhất
+- Result:
+
+  <img width="1206" height="543" alt="image" src="https://github.com/user-attachments/assets/6e6284cf-aa11-405a-9c08-0c1dca763ca2" />
+
+- Summary: có thế xem được xu hướng tiêu dùng của khách hàng trong ngắn hạn, giảm rủi ro thiếu dự trù hơn Option 1 và là optione tối ưu nhất
 
 
 ### Opt 3. minimum, average and maximum values of the running balance for each customer
@@ -291,7 +316,11 @@
     GROUP BY 
         customer_id
 ```
-=> Summary: Cung cấp cái nhìn tổng quan nhất: biết mức thấp nhất, trung bình và cao nhất của số dư.
+- Result:
+
+  <img width="1340" height="547" alt="image" src="https://github.com/user-attachments/assets/d91d19f1-a495-4956-97cb-320be1e819c0" />
+
+- Summary: Cung cấp cái nhìn tổng quan nhất: biết mức thấp nhất, trung bình và cao nhất của số dư.
 Giúp Data Bank chuẩn bị dung lượng đủ cho tình huống xấu nhất (max balance) → an toàn cho hệ thống.
 Tuy nhiên có thể dẫn tới dự trù dư thừa (overallocation), gây lãng phí tài nguyên nếu lấy max làm chuẩn.
 
