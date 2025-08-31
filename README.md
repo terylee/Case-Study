@@ -25,18 +25,25 @@
   <img width="868" height="316" alt="image" src="https://github.com/user-attachments/assets/46eb3bff-002c-4978-bf92-873cf22cafdf" />
 
 ### 4. How many days on average are customers reallocated to a different node?
-- check outlier is 9999-12-31
+#### 4.1 check outlier is 9999-12-31
 ```sql
         SELECT Distinct end_date FROM customer_nodes
         ORDER BY end_date DESC
 ```
+- Result:
 
-- average number of day
+    <img width="287" height="242" alt="image" src="https://github.com/user-attachments/assets/1a9a5f00-df2d-4841-81de-bc05c4e29a92" />
+
+#### 4.2 average number of day
 ```sql
         SELECT ROUND(AVG(DATEDIFF(day, start_date, end_date)), 0) AS avg_num_of_day
         FROM customer_nodes
         WHERE end_date <> '9999-12-31'
 ```
+- Result:
+
+    <img width="376" height="124" alt="image" src="https://github.com/user-attachments/assets/bfe88f0e-5f45-4d18-a5bf-27f59a294876" />
+
 ### 5. What is the median, 80th and 95th percentile for this same reallocation days metric for each region? 
 ```sql
     WITH cte AS(
@@ -65,6 +72,9 @@
     FROM stats
     ORDER BY region_name
 ```
+- Result:
+
+  <img width="1023" height="307" alt="image" src="https://github.com/user-attachments/assets/8ca2fed1-eddd-417c-b592-ab723d6e91b3" />
 
 # B. Customer Transactions
 ### 1. What is the unique count and total amount for each transaction type?
