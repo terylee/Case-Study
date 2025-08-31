@@ -329,55 +329,56 @@ Tuy nhiên có thể dẫn tới dự trù dư thừa (overallocation), gây lã
 Data Bank wants to try another option which is a bit more difficult to implement - they want to calculate data growth using an interest calculation, just like in a traditional savings account you might have with a bank.
 If the annual interest rate is set at 6% and the Data Bank team wants to reward its customers by increasing their data allocation based off the interest calculated on a daily basis at the end of each day, how much data would be required for this option on a monthly basis?
 
-### không tính lãi kép
+### Ý tưởng:
+1. Chuẩn hóa dữ liệu theo tháng → gom tất cả giao dịch trong cùng 1 tháng để lấy giá trị thay đổi ròng.
+2. Tính số dư lũy kế (running balance) → mỗi tháng số dư bằng tổng các thay đổi từ đầu đến tháng đó.
+3. Xác định số dư tháng trước (lag function) → dùng để tính lãi suất tháng này.
+4. Tính lãi suất tháng = prev_balance * (0.06 / 12), nếu số dư tháng trước âm → lãi suất = 0.
+5. Cộng lãi vào số dư cuối tháng để ra số dư sau lãi.
+   
 ```sql
-    WITH RunningBalance AS (
-        SELECT
-            customer_id
-          , txn_date
-          , CASE 
-                WHEN txn_type = 'deposit' THEN txn_amount
-                WHEN txn_type IN ('withdrawal', 'purchase') THEN -txn_amount
-                ELSE 0
-            END AS amount_change
-        FROM customer_transactions
-    )
-    , BalanceCalc AS (
-        SELECT
-            customer_id
-          , txn_date
-          , SUM(amount_change) OVER (
-                PARTITION BY customer_id 
-                ORDER BY txn_date 
-                ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS running_balance
-        FROM RunningBalance
-    )
-    , DailyInterest AS (
-        SELECT
-            customer_id
-          , txn_date
-          , running_balance
-          , running_balance * 0.06 / 365.0 AS daily_interest ## simple interest
-        FROM BalanceCalc
-    )
-    , MonthlyInterest AS (
-        SELECT
-            customer_id
-          , DATENAME(MONTH, txn_date) AS month_name
-          , SUM(daily_interest) AS total_interest
-        FROM DailyInterest
-        GROUP BY
-            customer_id
-          , DATENAME(MONTH, txn_date)
-    )
+    WITH monthly_txn AS (
     SELECT
-        customer_id
-      , month_name
-      , total_interest
-      , SUM(total_interest) OVER (PARTITION BY month_name) AS total_system_interest
-    FROM MonthlyInterest
-    ORDER BY customer_id
-        , month_name
+          customer_id
+        , DATEFROMPARTS(YEAR(txn_date), MONTH(txn_date), 1) AS month_start
+        , SUM(txn_amount) AS monthly_change
+    FROM customer_transactions
+    GROUP BY
+          customer_id
+        , DATEFROMPARTS(YEAR(txn_date), MONTH(txn_date), 1)
+)
+, running_balance AS (
+    SELECT
+          m.customer_id
+        , m.month_start
+        , SUM(m2.monthly_change) AS closing_balance
+    FROM monthly_txn m
+    JOIN monthly_txn m2
+      ON m.customer_id = m2.customer_id
+     AND m2.month_start <= m.month_start
+    GROUP BY
+          m.customer_id
+        , m.month_start
+)
+, interest_calc AS (
+    SELECT
+          r.customer_id
+        , r.month_start
+        , r.closing_balance
+        , LAG(r.closing_balance, 1, 0) OVER (PARTITION BY r.customer_id ORDER BY r.month_start) AS prev_balance
+    FROM running_balance r
+)
+SELECT
+      customer_id
+    , month_start
+    , closing_balance
+    , prev_balance * 0.06 / 12 AS monthly_interest
+    , closing_balance + (prev_balance * 0.06 / 12) AS closing_with_interest
+FROM interest_calc
+ORDER BY
+      customer_id
+    , month_start
 ```
+- Result:
 
+  <img width="1512" height="541" alt="image" src="https://github.com/user-attachments/assets/e982bc11-cd7a-4bbc-b322-510094f12e01" />
