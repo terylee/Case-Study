@@ -1,10 +1,10 @@
 # Case-Study
 ## A. Customer Nodes Exploration
 ## 1. How many unique nodes are there on the Data Bank system?
-'''    
+```    
     SELECT COUNT(DISTINCT node_id) unique_nodes 
     FROM customer_nodes	
-'''
+```
 ## 2. What is the number of nodes per region?
 ## 3. How many customers are allocated to each region? */
     SELECT r.region_name
