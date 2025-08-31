@@ -5,6 +5,9 @@
     SELECT COUNT(DISTINCT node_id) unique_nodes 
     FROM customer_nodes	
 ```
+- Result:
+  <img width="357" height="127" alt="image" src="https://github.com/user-attachments/assets/daaf9738-3d05-4f2a-9428-ae56ccb699fe" />
+
 ### 2. What is the number of nodes per region? & 3. How many customers are allocated to each region?
 ```sql    
     SELECT r.region_name
