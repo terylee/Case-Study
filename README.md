@@ -290,7 +290,7 @@
 
   <img width="1206" height="543" alt="image" src="https://github.com/user-attachments/assets/6e6284cf-aa11-405a-9c08-0c1dca763ca2" />
 
-- Summary: có thế xem được xu hướng tiêu dùng của khách hàng trong ngắn hạn, giảm rủi ro thiếu dự trù hơn Option 1 và là optione tối ưu nhất
+- Summary: có thế xem được xu hướng tiêu dùng của khách hàng trong ngắn hạn, giảm rủi ro thiếu dự trù hơn Option 1 và là option tối ưu nhất
 
 
 ### Opt 3. minimum, average and maximum values of the running balance for each customer
