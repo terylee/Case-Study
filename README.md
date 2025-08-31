@@ -6,6 +6,7 @@
     FROM customer_nodes	
 ```
 ### 2. What is the number of nodes per region? & 3. How many customers are allocated to each region?
+```sql    
     SELECT r.region_name
         , COUNT(DISTiNCT c.node_id) num_of_nodes
         , COUNT(DISTINCT c.customer_id) total_customers
@@ -14,19 +15,22 @@
     ON c.region_id = r.region_id
     GROUP BY r.region_name 
     ORDER BY r.region_name ASC
-
-## 4. How many days on average are customers reallocated to a different node?
-### check outlier is 9999-12-31
+```
+### 4. How many days on average are customers reallocated to a different node?
+- check outlier is 9999-12-31
+```sql
         SELECT Distinct end_date FROM customer_nodes
         ORDER BY end_date DESC
+```
 
-### average number of day
+- average number of day
+```sql
         SELECT ROUND(AVG(DATEDIFF(day, start_date, end_date)), 0) AS avg_num_of_day
         FROM customer_nodes
         WHERE end_date <> '9999-12-31'
-
-## 5. What is the median, 80th and 95th percentile for this same reallocation days metric for each region? 
-
+```
+### 5. What is the median, 80th and 95th percentile for this same reallocation days metric for each region? 
+```sql
     WITH cte AS(
         SELECT 
             c.region_id
@@ -52,17 +56,19 @@
         region_name, median, percentile_80, percentile_95
     FROM stats
     ORDER BY region_name
-
+```
 
 # B. Customer Transactions
-## 1. What is the unique count and total amount for each transaction type?
+### 1. What is the unique count and total amount for each transaction type?
+```sql
     SELECT txn_type
         , COUNT(txn_type) AS unique_count
         , SUM(txn_amount) AS total_amount
     FROM customer_transactions 
     GROUP BY txn_type
-
-## 2. What is the average total historical deposit counts and amounts for all customers?
+```
+### 2. What is the average total historical deposit counts and amounts for all customers?
+```sql
     WITH cte AS (
         SELECT 
             customer_id
@@ -78,8 +84,10 @@
         , ROUND(AVG(CAST(deposit_count AS float)), 0) count
         , ROUND(AVG(CAST(deposit_amount AS float)), 0) amount
     FROM cte
+```
 
-## 3. For each month - how many Data Bank customers make more than 1 deposit and either 1 purchase or 1 withdrawal in a single month?
+### 3. For each month - how many Data Bank customers make more than 1 deposit and either 1 purchase or 1 withdrawal in a single month?
+```sql
     WITH cus_count AS (
         SELECT 
             customer_id
@@ -107,8 +115,10 @@
         OR withdrawal_count = 1)
     GROUP BY [Year],[Month], month_name
     ORDER BY [year], [Month] ASC
+```
 
-## 4. What is the closing balance for each customer at the end of the month?
+### 4. What is the closing balance for each customer at the end of the month?
+```sql
     WITH customer_monthly_balance AS (
         SELECT 
             customer_id
@@ -135,8 +145,10 @@
             ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
           ) AS closing_balance
     FROM customer_monthly_balance
+```
 
-## 5. What is the percentage of customers who increase their closing balance by more than 5%?
+### 5. What is the percentage of customers who increase their closing balance by more than 5%?
+```sql
     WITH cus_monthly AS (
         SELECT
             customer_id
@@ -188,9 +200,10 @@
         AS decimal(5,2)
         ) [percentage]
     FROM first_last
-
+```
 # C. Data Allocation Challenge
-## Opt 1. running customer balance column that includes the impact each transaction
+### Opt 1. running customer balance column that includes the impact each transaction
+```sql
     SELECT customer_id
         , txn_date
         , txn_type
@@ -201,14 +214,15 @@
                   ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
               ) running_balance
     FROM customer_transactions
+```
+=> Summary: phù hợp xem chi tiết sao kê và nắm bắt nhanh được số dư cuối tháng.
+    Tuy nhiên có thể không phản ánh chính xác nhu cầu thực tế: 
+    - nếu khách hàng có số dư cao giữa tháng nhưng rút gần hết trước cuối tháng → ngân hàng sẽ dự trù thiếu
+    - Rủi ro không đủ dung lượng để đáp ứng khi khách tăng sử dụng trong tháng 
 
-=> Summary: phù hợp xem chi tiết sao kê và nắm bắt nhanh được số dư cuối tháng. 
-Tuy nhiên có thể không phản ánh chính xác nhu cầu thực tế: 
-    + nếu khách hàng có số dư cao giữa tháng nhưng rút gần hết trước cuối tháng → ngân hàng sẽ dự trù thiếu
-    + Rủi ro không đủ dung lượng để đáp ứng khi khách tăng sử dụng trong tháng 
 
-
-## Opt 2. customer balance at the end of each month
+### Opt 2. customer balance at the end of each month
+```sql
     WITH cus_monthly AS (
         SELECT customer_id
             , MONTH(txn_date) [Month]
@@ -232,11 +246,12 @@ Tuy nhiên có thể không phản ánh chính xác nhu cầu thực tế:
     FROM cus_monthly
     ORDER BY customer_id
         , [Month]
+```
+=> Summary: có thế xem được xu hướng tiêu dùng của khách hàng trong ngắn hạn, giảm rủi ro thiếu dự trù hơn Option 1 và là optione tối ưu nhất
 
-=> Summary: có thế xem được xu hướng tiêu dùng của khách hàng trong ngắn hạn, giảm rủi ro thiếu dự trù hơn Option 1
 
-
-## Opt 3. minimum, average and maximum values of the running balance for each customer
+### Opt 3. minimum, average and maximum values of the running balance for each customer
+```sql
     WITH cus_running_balance AS (
         SELECT customer_id
             , txn_date
@@ -257,7 +272,7 @@ Tuy nhiên có thể không phản ánh chính xác nhu cầu thực tế:
     FROM cus_running_balance
     GROUP BY 
         customer_id
-
+```
 => Summary: Cung cấp cái nhìn tổng quan nhất: biết mức thấp nhất, trung bình và cao nhất của số dư.
 Giúp Data Bank chuẩn bị dung lượng đủ cho tình huống xấu nhất (max balance) → an toàn cho hệ thống.
 Tuy nhiên có thể dẫn tới dự trù dư thừa (overallocation), gây lãng phí tài nguyên nếu lấy max làm chuẩn.
@@ -268,6 +283,7 @@ Data Bank wants to try another option which is a bit more difficult to implement
 If the annual interest rate is set at 6% and the Data Bank team wants to reward its customers by increasing their data allocation based off the interest calculated on a daily basis at the end of each day, how much data would be required for this option on a monthly basis?
 
 ### không tính lãi kép
+```sql
     WITH RunningBalance AS (
         SELECT
             customer_id
@@ -316,6 +332,5 @@ If the annual interest rate is set at 6% and the Data Bank team wants to reward 
     FROM MonthlyInterest
     ORDER BY customer_id
         , month_name
-      
-
+```
 
