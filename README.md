@@ -1,12 +1,11 @@
 # Case-Study
 # A. Customer Nodes Exploration
 ## 1. How many unique nodes are there on the Data Bank system?
-```    
+
     SELECT COUNT(DISTINCT node_id) unique_nodes 
     FROM customer_nodes	
-```
-## 2. What is the number of nodes per region?
-## 3. How many customers are allocated to each region?
+
+## 2. What is the number of nodes per region? & 3. How many customers are allocated to each region?
     SELECT r.region_name
         , COUNT(DISTiNCT c.node_id) num_of_nodes
         , COUNT(DISTINCT c.customer_id) total_customers
@@ -26,7 +25,7 @@
         FROM customer_nodes
         WHERE end_date <> '9999-12-31'
 
-##5. What is the median, 80th and 95th percentile for this same reallocation days metric for each region? 
+## 5. What is the median, 80th and 95th percentile for this same reallocation days metric for each region? 
 
     WITH cte AS(
         SELECT 
