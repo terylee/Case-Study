@@ -20,6 +20,10 @@
     GROUP BY r.region_name 
     ORDER BY r.region_name ASC
 ```
+- Result:
+
+  <img width="868" height="316" alt="image" src="https://github.com/user-attachments/assets/46eb3bff-002c-4978-bf92-873cf22cafdf" />
+
 ### 4. How many days on average are customers reallocated to a different node?
 - check outlier is 9999-12-31
 ```sql
